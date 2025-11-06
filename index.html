@@ -1,33 +1,72 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <script>
-      // الأرقام
-      const links = [
-        
-        "https://api.whatsapp.com/send?phone=9647876957656&text=السلام%20عليكم",
-        "https://api.whatsapp.com/send?phone=9647851529968&text=السلام%20عليكم"
-        
-      ];
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WhatsApp Redirect</title>
+</head>
+<body>
+<script>
+(function () {
+  // رقم الواتساب
+  var phone = "9647876957656";
 
-      // نخزن آخر رقم مستخدم بالـ localStorage
-      let lastIndex = localStorage.getItem("lastIndex");
-      if (lastIndex === null) {
-        lastIndex = 0;
-      } else {
-        lastIndex = (parseInt(lastIndex) + 1) % links.length;
-      }
+  // اقرأ باراميترات الرابط
+  var q = new URLSearchParams(location.search);
 
-      // نخزن التحديث
-      localStorage.setItem("lastIndex", lastIndex);
+  // خزن أهم باراميترات TikTok + أي UTM
+  var keys = [
+    "ttclid", "campaign_id", "adset_id", "ad_id", "creative_id",
+    "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"
+  ];
 
-      // تحويل المستخدم للرابط بالدور
-      window.location.href = links[lastIndex];
-    </script>
-    <title>جاري تحويلك...</title>
-  </head>
-  <body>
-    <p>يرجى الانتظار، جاري توجيهك إلى واتساب...</p>
-  </body>
+  // بنّي رسالة الواتساب (تقدر تغيّر النص الأساسي براحتك)
+  var baseText = "أهلاً، أريد الاستفسار عن المنتج.";
+  var meta = [];
+
+  keys.forEach(function(k){
+    var v = q.get(k);
+    if (v) meta.push(k + ":" + v);
+  });
+
+  var text = baseText + (meta.length ? " [" + meta.join(" | ") + "]" : "");
+
+  // رابط wa.me
+  var wa = "https://wa.me/" + phone + "?text=" + encodeURIComponent(text);
+
+  // جرّب فتح تطبيق الواتساب مباشرة على الموبايل
+  var appLink = "whatsapp://send?phone=" + phone + "&text=" + encodeURIComponent(text);
+
+  // إذا كان الجهاز يدعم بروتوكول الواتساب، افتحه؛ وإلا حوّل لـ wa.me
+  var triedApp = false;
+  var timer = setTimeout(function () {
+    if (!triedApp) location.replace(wa);
+  }, 1200);
+
+  // حاول فتح التطبيق
+  var iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  iframe.onload = function(){};
+  document.body.appendChild(iframe);
+
+  try {
+    triedApp = true;
+    iframe.src = appLink;
+    // فallback سريع للويب
+    setTimeout(function(){ location.replace(wa); }, 800);
+  } catch (e) {
+    location.replace(wa);
+  }
+})();
+</script>
+
+<noscript>
+  <!-- فfallback إذا المتصفح مطفي الجافاسكربت -->
+  <p>اضغط هنا للمتابعة إلى واتساب:</p>
+  <p><a id="w" href="#">فتح واتساب</a></p>
+  <script>
+    // هذا القسم لن يعمل بدون جافاسكربت، موجود للهيكل فقط
+  </script>
+</noscript>
+</body>
 </html>
