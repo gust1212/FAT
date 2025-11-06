@@ -8,65 +8,38 @@
 <body>
 <script>
 (function () {
+
   // رقم الواتساب
   var phone = "9647876957656";
 
-  // اقرأ باراميترات الرابط
+  // التقاط الباراميترات (ttclid + UTM)
   var q = new URLSearchParams(location.search);
 
-  // خزن أهم باراميترات TikTok + أي UTM
-  var keys = [
-    "ttclid", "campaign_id", "adset_id", "ad_id", "creative_id",
-    "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"
-  ];
-
-  // بنّي رسالة الواتساب (تقدر تغيّر النص الأساسي براحتك)
+  // نص الرسالة (بدون أي معلومات تتبع)
   var baseText = "أهلاً، أريد الاستفسار عن المنتج.";
-  var meta = [];
 
-  keys.forEach(function(k){
-    var v = q.get(k);
-    if (v) meta.push(k + ":" + v);
-  });
+  // رابط تطبيق واتساب
+  var appLink = "whatsapp://send?phone=" + phone + "&text=" + encodeURIComponent(baseText);
 
-  var text = baseText + (meta.length ? " [" + meta.join(" | ") + "]" : "");
+  // رابط واتساب ويب
+  var webLink = "https://wa.me/" + phone + "?text=" + encodeURIComponent(baseText);
 
-  // رابط wa.me
-  var wa = "https://wa.me/" + phone + "?text=" + encodeURIComponent(text);
+  // نطي TikTok فرصة يحسب الـ Landing Page View
+  setTimeout(function () {
+      // محاولة فتح التطبيق
+      var iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = appLink;
+      document.body.appendChild(iframe);
 
-  // جرّب فتح تطبيق الواتساب مباشرة على الموبايل
-  var appLink = "whatsapp://send?phone=" + phone + "&text=" + encodeURIComponent(text);
+      // fallback لواتساب ويب
+      setTimeout(function () {
+          window.location.href = webLink;
+      }, 700);
 
-  // إذا كان الجهاز يدعم بروتوكول الواتساب، افتحه؛ وإلا حوّل لـ wa.me
-  var triedApp = false;
-  var timer = setTimeout(function () {
-    if (!triedApp) location.replace(wa);
-  }, 1200);
+  }, 350); // تأخير بسيط حتى TikTok يسجل الحدث
 
-  // حاول فتح التطبيق
-  var iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  iframe.onload = function(){};
-  document.body.appendChild(iframe);
-
-  try {
-    triedApp = true;
-    iframe.src = appLink;
-    // فallback سريع للويب
-    setTimeout(function(){ location.replace(wa); }, 800);
-  } catch (e) {
-    location.replace(wa);
-  }
 })();
 </script>
-
-<noscript>
-  <!-- فfallback إذا المتصفح مطفي الجافاسكربت -->
-  <p>اضغط هنا للمتابعة إلى واتساب:</p>
-  <p><a id="w" href="#">فتح واتساب</a></p>
-  <script>
-    // هذا القسم لن يعمل بدون جافاسكربت، موجود للهيكل فقط
-  </script>
-</noscript>
 </body>
 </html>
